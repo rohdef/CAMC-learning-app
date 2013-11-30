@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/CAMC Learner/CAMC Learner.iml" filepath="$PROJECT_DIR$/CAMC Learner/CAMC Learner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CAMCLearner.iml" filepath="$PROJECT_DIR$/CAMCLearner.iml" />
+    </modules>
+  </component>
+</project>
+
