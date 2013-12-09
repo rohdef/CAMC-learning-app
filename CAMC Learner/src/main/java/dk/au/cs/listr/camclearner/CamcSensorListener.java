@@ -42,7 +42,8 @@ public class CamcSensorListener implements SensorEventListener {
         long currentTime = new Date().getTime();
         if (timeFrame < currentTime) {
             timeFrame = currentTime+timeDelay;
-            int halfCurrentCount = Math.round(slidingWindow.size()/2);
+            int currentCount = slidingWindow.size();
+            int halfCurrentCount = Math.round(currentCount/2);
             float[] dataSum = new float[sensorEvent.values.length];
 
             // We only remove haft for data overlap
@@ -63,17 +64,9 @@ public class CamcSensorListener implements SensorEventListener {
 
             lastReading = new float[dataSum.length];
             for (int i=0; i<dataSum.length; i++) {
-                lastReading[i] = dataSum[i]/WINDOW_SIZE;
+                lastReading[i] = dataSum[i]/currentCount;
             }
 
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("[");
-            for (float f : lastReading) {
-                stringBuilder.append(f + ", ");
-            }
-            stringBuilder.append("]");
-
-            logger.debug("Firering window filled event for the readings: " + stringBuilder.toString());
             windowFilledEvent.sensorEventFired();
         }
     }

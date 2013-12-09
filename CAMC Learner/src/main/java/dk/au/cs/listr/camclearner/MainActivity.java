@@ -14,12 +14,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements View.OnClickListener {
+    private final Logger logger = LoggerFactory.getLogger(MainActivity.class);
+    private Button lyingDownButton;
+    private Button sitButton;
+    private Button walkButton;
+    private Button jumpButton;
+    private boolean isIdle = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,62 +39,70 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState == null) {
-            getFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
-                    .commit();
+//            getFragmentManager().beginTransaction()
+//                    .add(R.id.container, new PlaceholderFragment())
+//                    .commit();
         }
 
-        ListView sensorListView = (ListView) findViewById(R.id.sensorList);
+        logger.debug("" + isIdle);
 
-        SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        List<Sensor> sensorList = sensorManager.getSensorList(Sensor.TYPE_LINEAR_ACCELERATION);
-        ArrayList<String> items = new ArrayList<String>();
-        for (Sensor sensor : sensorList) {
-            items.add(sensor.toString());
-        }
+        lyingDownButton = (Button) findViewById(R.id.lyingDownButton);
+        lyingDownButton.setOnClickListener(this);
 
-        Sensor s = sensorList.get(0);
-        sensorManager.registerListener(new CamcSensorListener(), s, SensorManager.SENSOR_DELAY_NORMAL);
+        sitButton = (Button) findViewById(R.id.sitButton);
+        sitButton.setOnClickListener(this);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
-        sensorListView.setAdapter(adapter);
-    }
+        walkButton = (Button) findViewById(R.id.walkButton);
+        walkButton.setOnClickListener(this);
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+        jumpButton = (Button) findViewById(R.id.jumpButton);
+        jumpButton.setOnClickListener(this);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+    public void onClick(View view) {
+        isIdle = false;
+        logger.debug(""+isIdle);
+
+        setButtonsEnabled(false);
+
+        int timeToMeasure = 0;
+        if (view == lyingDownButton) {
+            timeToMeasure = 30000; // 300 secs = 5 min
+        } else if (view == sitButton) {
+            timeToMeasure = 30000; // 300 secs = 5 min
+        } else if (view == walkButton) {
+            timeToMeasure = 30000; // 300 secs = 5 min
+        } else {
+            timeToMeasure = 30000; // 30 sec
         }
-        return super.onOptionsItemSelected(item);
+
+        final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        final CamcSensorListener camcSensorListenerAccel, camcSensorListenerRotation;
+
+        Sensor s = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        camcSensorListenerAccel = new CamcSensorListener();
+        sensorManager.registerListener(camcSensorListenerAccel, s, SensorManager.SENSOR_DELAY_NORMAL);
+
+        s = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        camcSensorListenerRotation = new CamcSensorListener();
+        sensorManager.registerListener(camcSensorListenerRotation, s, SensorManager.SENSOR_DELAY_NORMAL);
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                sensorManager.unregisterListener(camcSensorListenerAccel);
+                sensorManager.unregisterListener(camcSensorListenerRotation);
+                setButtonsEnabled(true);
+                isIdle = true;
+            }
+        }, timeToMeasure);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
+    private void setButtonsEnabled(boolean enabled) {
+        lyingDownButton.setEnabled(enabled);
+        sitButton.setEnabled(enabled);
+        walkButton.setEnabled(enabled);
+        jumpButton.setEnabled(enabled);
     }
-
 }
