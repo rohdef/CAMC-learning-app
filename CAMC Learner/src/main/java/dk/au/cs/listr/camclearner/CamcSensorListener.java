@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -17,18 +18,16 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class CamcSensorListener implements SensorEventListener {
     private final Logger logger = LoggerFactory.getLogger(CamcSensorListener.class);
     private final WindowFilledEvent windowFilledEvent;
-    private static final int WINDOW_SIZE = 128;
     // To save calculations
-    private final int HALF_WINDOW;
     private final Queue<float[]> slidingWindow;
-    private float[] lastReading;
-    private int windowFilledCount = 0;
+    private float[] lastReading = null;
+    private long timeFrame, timeDelay = 1000;
 
     public CamcSensorListener() {
-        HALF_WINDOW = Math.round(WINDOW_SIZE/2);
-        slidingWindow = new ArrayBlockingQueue<float[]>(WINDOW_SIZE);
+        slidingWindow = new ArrayBlockingQueue<float[]>(4096);
         windowFilledEvent = WindowFilledEvent.getInstance();
         windowFilledEvent.registerCamcSensorListener(this);
+        timeFrame = new Date().getTime() + (2*timeDelay);
     }
 
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -40,11 +39,14 @@ public class CamcSensorListener implements SensorEventListener {
 
         slidingWindow.offer(data);
 
-        if (slidingWindow.size() == WINDOW_SIZE) {
+        long currentTime = new Date().getTime();
+        if (timeFrame < currentTime) {
+            timeFrame = currentTime+timeDelay;
+            int halfCurrentCount = Math.round(slidingWindow.size()/2);
             float[] dataSum = new float[sensorEvent.values.length];
 
             // We only remove haft for data overlap
-            for (int i = 0; i<HALF_WINDOW; i++) {
+            for (int i = 0; i<halfCurrentCount; i++) {
                 float[] f = slidingWindow.remove();
 
                 for (int j = 0; j<f.length; j++) {
@@ -69,9 +71,7 @@ public class CamcSensorListener implements SensorEventListener {
             for (float f : lastReading) {
                 stringBuilder.append(f + ", ");
             }
-
             stringBuilder.append("]");
-            windowFilledCount++;
 
             logger.debug("Firering window filled event for the readings: " + stringBuilder.toString());
             windowFilledEvent.sensorEventFired();
@@ -80,10 +80,6 @@ public class CamcSensorListener implements SensorEventListener {
 
     public float[] getLastReading() {
         return lastReading;
-    }
-
-    public int getWindowFilledCount() {
-        return windowFilledCount;
     }
 
     @Override

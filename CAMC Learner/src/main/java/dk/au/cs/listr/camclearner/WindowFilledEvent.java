@@ -9,6 +9,7 @@ import java.util.List;
 public class WindowFilledEvent {
     private static final WindowFilledEvent instance = new WindowFilledEvent();
     private List<CamcSensorListener> camcSensorListenerList = new ArrayList<CamcSensorListener>();
+    private boolean ready = false;
 
     public static WindowFilledEvent getInstance() {
         return  instance;
@@ -23,7 +24,16 @@ public class WindowFilledEvent {
     }
 
     public void sensorEventFired() {
+        // To ensure that all windows have been filled.
+        if (!ready) {
+            for (CamcSensorListener camcSensorListener : camcSensorListenerList) {
+                if (camcSensorListener.getLastReading() == null)
+                    return;
+            }
+            ready = true;
+        }
 
+        // writeData
     }
 
     private WindowFilledEvent() {}

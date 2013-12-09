@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CAMC Learner/CAMC Learner.iml" filepath="$PROJECT_DIR$/CAMC Learner/CAMC Learner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CAMC-learning-app.iml" filepath="$PROJECT_DIR$/CAMC-learning-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/CAMCLearner.iml" filepath="$PROJECT_DIR$/CAMCLearner.iml" />
     </modules>
   </component>
