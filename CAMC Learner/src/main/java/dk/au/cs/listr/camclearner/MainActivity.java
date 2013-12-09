@@ -35,11 +35,14 @@ public class MainActivity extends Activity {
         ListView sensorListView = (ListView) findViewById(R.id.sensorList);
 
         SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        List<Sensor> sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL);
+        List<Sensor> sensorList = sensorManager.getSensorList(Sensor.TYPE_LINEAR_ACCELERATION);
         ArrayList<String> items = new ArrayList<String>();
         for (Sensor sensor : sensorList) {
-            items.add(sensor.getName());
+            items.add(sensor.toString());
         }
+
+        Sensor s = sensorList.get(0);
+        sensorManager.registerListener(new CamcSensorListener(), s, SensorManager.SENSOR_DELAY_NORMAL);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
         sensorListView.setAdapter(adapter);
