@@ -6,7 +6,11 @@ import android.app.Fragment;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,6 +20,7 @@ import android.os.Build;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,24 +32,16 @@ import java.util.TimerTask;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     private final Logger logger = LoggerFactory.getLogger(MainActivity.class);
-    private Button lyingDownButton;
-    private Button sitButton;
-    private Button walkButton;
-    private Button jumpButton;
-    private boolean isIdle = true;
+    private static Button lyingDownButton;
+    private static Button sitButton;
+    private static Button walkButton;
+    private static Button jumpButton;
+    private static boolean isIdle = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        if (savedInstanceState == null) {
-//            getFragmentManager().beginTransaction()
-//                    .add(R.id.container, new PlaceholderFragment())
-//                    .commit();
-        }
-
-        logger.debug("" + isIdle);
 
         lyingDownButton = (Button) findViewById(R.id.lyingDownButton);
         lyingDownButton.setOnClickListener(this);
@@ -57,46 +54,80 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         jumpButton = (Button) findViewById(R.id.jumpButton);
         jumpButton.setOnClickListener(this);
+
+        setButtonsEnabled(isIdle);
     }
 
     @Override
     public void onClick(View view) {
         isIdle = false;
-        logger.debug(""+isIdle);
 
         setButtonsEnabled(false);
 
-        int timeToMeasure = 0;
+        final int timeToMeasure;
         if (view == lyingDownButton) {
             timeToMeasure = 30000; // 300 secs = 5 min
+            WindowFilledEvent.getInstance().setCurrentLogginType("lying");
         } else if (view == sitButton) {
             timeToMeasure = 30000; // 300 secs = 5 min
+            WindowFilledEvent.getInstance().setCurrentLogginType("sitting");
         } else if (view == walkButton) {
             timeToMeasure = 30000; // 300 secs = 5 min
+            WindowFilledEvent.getInstance().setCurrentLogginType("walking");
         } else {
             timeToMeasure = 30000; // 30 sec
+            WindowFilledEvent.getInstance().setCurrentLogginType("dancing");
         }
 
-        final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        final CamcSensorListener camcSensorListenerAccel, camcSensorListenerRotation;
+        final Handler myHandler = new Handler();
 
-        Sensor s = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        camcSensorListenerAccel = new CamcSensorListener();
-        sensorManager.registerListener(camcSensorListenerAccel, s, SensorManager.SENSOR_DELAY_NORMAL);
+        final Ringtone notificationTone;
+        Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        notificationTone = RingtoneManager.getRingtone(getApplicationContext(), notification);
+        Runnable updateUi = new Runnable() {
+            private int count = 9;
 
-        s = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        camcSensorListenerRotation = new CamcSensorListener();
-        sensorManager.registerListener(camcSensorListenerRotation, s, SensorManager.SENSOR_DELAY_NORMAL);
-
-        new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                sensorManager.unregisterListener(camcSensorListenerAccel);
-                sensorManager.unregisterListener(camcSensorListenerRotation);
-                setButtonsEnabled(true);
-                isIdle = true;
+                TextView statusText = (TextView) findViewById(R.id.countDownText);
+                statusText.setText("" + count--);
+
+                if (count >= 0) {
+                    myHandler.postDelayed(this, 1000);
+                } else {
+                    final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+                    final CamcSensorListener camcSensorListenerAccel, camcSensorListenerRotation;
+
+
+                    Sensor s = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+                    camcSensorListenerAccel = new CamcSensorListener();
+                    sensorManager.registerListener(camcSensorListenerAccel, s, SensorManager.SENSOR_DELAY_NORMAL);
+
+                    s = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+                    camcSensorListenerRotation = new CamcSensorListener();
+                    sensorManager.registerListener(camcSensorListenerRotation, s, SensorManager.SENSOR_DELAY_NORMAL);
+
+                    try {
+                        notificationTone.play();
+                    } catch (Exception e) {}
+
+                    myHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sensorManager.unregisterListener(camcSensorListenerAccel);
+                            sensorManager.unregisterListener(camcSensorListenerRotation);
+                            setButtonsEnabled(true);
+                            isIdle = true;
+                            try {
+                                notificationTone.play();
+                            } catch (Exception e) {}
+                        }
+                    }, timeToMeasure);
+                }
             }
-        }, timeToMeasure);
+        };
+
+        myHandler.postDelayed(updateUi, 1000);
     }
 
     private void setButtonsEnabled(boolean enabled) {

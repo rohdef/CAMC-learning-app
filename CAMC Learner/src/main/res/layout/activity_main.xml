@@ -19,6 +19,15 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/countDownText"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:text="10" />
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -51,7 +60,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Jump around 1 min"
+        android:text="Jump around 30 sec"
         android:id="@+id/jumpButton"
         android:layout_below="@+id/walkButton"
         android:layout_centerHorizontal="true"

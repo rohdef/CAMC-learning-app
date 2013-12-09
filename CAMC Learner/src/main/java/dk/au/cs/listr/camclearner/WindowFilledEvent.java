@@ -55,7 +55,6 @@ public class WindowFilledEvent {
 
         for (CamcSensorListener camcSensorListener : camcSensorListenerList) {
             float[] lastReading = camcSensorListener.getLastReading();
-            logger.debug("lastReading == null: " + (lastReading==null));
             for (float f : lastReading) {
                 stringBuilder.append(f + ", ");
             }
