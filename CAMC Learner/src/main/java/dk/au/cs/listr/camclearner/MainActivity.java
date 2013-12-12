@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +39,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static Button walkButton;
     private static Button jumpButton;
     private static boolean isIdle = true;
+    private static DataHelper dataHelper = new DataHelper();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         jumpButton = (Button) findViewById(R.id.jumpButton);
         jumpButton.setOnClickListener(this);
+
+        dataHelper.setContext(this.getApplicationContext());
+        Button deleteButton = (Button) findViewById(R.id.deleteFileButton);
+        Button sendButton = (Button) findViewById(R.id.sendFileButton);
+        deleteButton.setOnClickListener(dataHelper);
+        sendButton.setOnClickListener(dataHelper);
 
         setButtonsEnabled(isIdle);
     }
