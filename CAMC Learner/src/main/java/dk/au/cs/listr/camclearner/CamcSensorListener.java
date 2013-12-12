@@ -22,6 +22,7 @@ public class CamcSensorListener implements SensorEventListener {
     private final Queue<float[]> slidingWindow;
     private float[] lastReading = null;
     private long timeFrame, timeDelay = 1000;
+    public String id;
 
     public CamcSensorListener() {
         slidingWindow = new ArrayBlockingQueue<float[]>(4096);
@@ -30,7 +31,7 @@ public class CamcSensorListener implements SensorEventListener {
         timeFrame = new Date().getTime() + (2*timeDelay);
     }
 
-    public void onSensorChanged(SensorEvent sensorEvent) {
+    public synchronized void onSensorChanged(SensorEvent sensorEvent) {
         // According to Markus' talk we do not own the event data and should copy them.
         float[] data = new float[sensorEvent.values.length];
         for (int i=0; i<sensorEvent.values.length; i++) {
@@ -40,6 +41,7 @@ public class CamcSensorListener implements SensorEventListener {
         slidingWindow.offer(data);
 
         long currentTime = new Date().getTime();
+        logger.debug(id + " Current time: " + currentTime + " time  frame:" + timeFrame);
         if (timeFrame < currentTime) {
             timeFrame = currentTime+timeDelay;
             int currentCount = slidingWindow.size();

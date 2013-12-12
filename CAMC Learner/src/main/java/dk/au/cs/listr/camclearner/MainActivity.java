@@ -101,10 +101,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                     Sensor s = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
                     camcSensorListenerAccel = new CamcSensorListener();
+                    camcSensorListenerAccel.id = "Acc";
                     sensorManager.registerListener(camcSensorListenerAccel, s, SensorManager.SENSOR_DELAY_NORMAL);
 
                     s = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
                     camcSensorListenerRotation = new CamcSensorListener();
+                    camcSensorListenerRotation.id = "Rot";
                     sensorManager.registerListener(camcSensorListenerRotation, s, SensorManager.SENSOR_DELAY_NORMAL);
 
                     try {
