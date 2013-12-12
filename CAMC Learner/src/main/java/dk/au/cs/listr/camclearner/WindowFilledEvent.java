@@ -28,6 +28,11 @@ public class WindowFilledEvent extends Activity {
     private List<CamcSensorListener> camcSensorListenerList = new ArrayList<CamcSensorListener>();
     private boolean ready = false;
     private String currentLogginType = "none";
+    private Context context;
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
 
     public static WindowFilledEvent getInstance() {
         return  instance;
@@ -85,7 +90,7 @@ public class WindowFilledEvent extends Activity {
             return;
         }
 
-        File externalFilesDir = getApplicationContext().getExternalFilesDir(null);
+        File externalFilesDir = context.getExternalFilesDir(null);
         final File storageDirectory = new File(externalFilesDir, "listr");
 
         if (!storageDirectory.exists()) {

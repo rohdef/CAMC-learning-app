@@ -44,6 +44,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        WindowFilledEvent.getInstance().setContext(getApplicationContext());
+
         lyingDownButton = (Button) findViewById(R.id.lyingDownButton);
         lyingDownButton.setOnClickListener(this);
 
