@@ -11,6 +11,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -66,13 +67,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         final int timeToMeasure;
         if (view == lyingDownButton) {
-            timeToMeasure = 30000; // 300 secs = 5 min
+            timeToMeasure = 300000; // 300 secs = 5 min
             WindowFilledEvent.getInstance().setCurrentLogginType("lying");
         } else if (view == sitButton) {
-            timeToMeasure = 30000; // 300 secs = 5 min
+            timeToMeasure = 300000; // 300 secs = 5 min
             WindowFilledEvent.getInstance().setCurrentLogginType("sitting");
         } else if (view == walkButton) {
-            timeToMeasure = 30000; // 300 secs = 5 min
+            timeToMeasure = 300000; // 300 secs = 5 min
             WindowFilledEvent.getInstance().setCurrentLogginType("walking");
         } else {
             timeToMeasure = 30000; // 30 sec
@@ -84,6 +85,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         final Ringtone notificationTone;
         Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         notificationTone = RingtoneManager.getRingtone(getApplicationContext(), notification);
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        final PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "camcLearner");
+        wakeLock.acquire();
+
         Runnable updateUi = new Runnable() {
             private int count = 9;
 
@@ -98,15 +103,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
                     final CamcSensorListener camcSensorListenerAccel, camcSensorListenerRotation;
 
-
                     Sensor s = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
                     camcSensorListenerAccel = new CamcSensorListener();
-                    camcSensorListenerAccel.id = "Acc";
                     sensorManager.registerListener(camcSensorListenerAccel, s, SensorManager.SENSOR_DELAY_NORMAL);
 
                     s = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
                     camcSensorListenerRotation = new CamcSensorListener();
-                    camcSensorListenerRotation.id = "Rot";
                     sensorManager.registerListener(camcSensorListenerRotation, s, SensorManager.SENSOR_DELAY_NORMAL);
 
                     try {
@@ -118,6 +120,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         public void run() {
                             sensorManager.unregisterListener(camcSensorListenerAccel);
                             sensorManager.unregisterListener(camcSensorListenerRotation);
+                            WindowFilledEvent.getInstance().reset();
+                            wakeLock.release();
                             setButtonsEnabled(true);
                             isIdle = true;
                             try {

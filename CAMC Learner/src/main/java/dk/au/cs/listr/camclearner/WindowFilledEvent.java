@@ -1,15 +1,20 @@
 package dk.au.cs.listr.camclearner;
 
+import android.app.Activity;
+import android.content.Context;
+import android.net.Uri;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by rohdef on 12/8/13.
  */
-public class WindowFilledEvent {
+public class WindowFilledEvent extends Activity {
     private final Logger logger = LoggerFactory.getLogger(WindowFilledEvent.class);
     private static final WindowFilledEvent instance = new WindowFilledEvent();
     private List<CamcSensorListener> camcSensorListenerList = new ArrayList<CamcSensorListener>();
@@ -26,6 +31,11 @@ public class WindowFilledEvent {
 
     public void removeCamcSensorListener(CamcSensorListener camcSensorListener) {
         camcSensorListenerList.remove(camcSensorListener);
+    }
+
+    public void reset() {
+        ready = false;
+        camcSensorListenerList.clear();
     }
 
     public void sensorEventFired() {
@@ -51,7 +61,6 @@ public class WindowFilledEvent {
 
     private void writeData() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[");
 
         for (CamcSensorListener camcSensorListener : camcSensorListenerList) {
             float[] lastReading = camcSensorListener.getLastReading();
@@ -59,10 +68,20 @@ public class WindowFilledEvent {
                 stringBuilder.append(f + ", ");
             }
         }
+        stringBuilder.append(currentLogginType);
 
-        stringBuilder.append("]");
+        String filename = "camcWeka.data";
+        FileOutputStream outputStream;
 
-        logger.debug(currentLogginType + " data: " + stringBuilder.toString());
+        try {
+            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+            outputStream.write(stringBuilder.toString().getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            logger.error("Something went wrong saving data", e);
+        }
+
+        logger.debug("data: " + stringBuilder.toString());
     }
 
     private WindowFilledEvent() {}

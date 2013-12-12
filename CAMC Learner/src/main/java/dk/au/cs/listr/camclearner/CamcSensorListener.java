@@ -22,7 +22,6 @@ public class CamcSensorListener implements SensorEventListener {
     private final Queue<float[]> slidingWindow;
     private float[] lastReading = null;
     private long timeFrame, timeDelay = 1000;
-    public String id;
 
     public CamcSensorListener() {
         slidingWindow = new ArrayBlockingQueue<float[]>(4096);
@@ -41,7 +40,6 @@ public class CamcSensorListener implements SensorEventListener {
         slidingWindow.offer(data);
 
         long currentTime = new Date().getTime();
-        logger.debug(id + " Current time: " + currentTime + " time  frame:" + timeFrame);
         if (timeFrame < currentTime) {
             timeFrame = currentTime+timeDelay;
             int currentCount = slidingWindow.size();
