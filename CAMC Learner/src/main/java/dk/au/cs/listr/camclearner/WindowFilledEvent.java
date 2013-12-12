@@ -3,11 +3,19 @@ package dk.au.cs.listr.camclearner;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Environment;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Closer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,15 +78,43 @@ public class WindowFilledEvent extends Activity {
         }
         stringBuilder.append(currentLogginType);
 
+
+        String storageState = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(storageState)) {
+            logger.error("Failed to get storage access.");
+            return;
+        }
+
+        File externalFilesDir = getApplicationContext().getExternalFilesDir(null);
+        final File storageDirectory = new File(externalFilesDir, "listr");
+
+        if (!storageDirectory.exists()) {
+            if (!storageDirectory.mkdir()) {
+                logger.error("Could not create storage dir");
+                return;
+            }
+        }
+
         String filename = "camcWeka.data";
-        FileOutputStream outputStream;
+        File file = new File(storageDirectory, filename);
+
+        Closer closer = Closer.create();
 
         try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(stringBuilder.toString().getBytes());
-            outputStream.close();
+            BufferedWriter writer = closer.register(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), Charsets.UTF_8)));
+
+            writer.write(stringBuilder.toString());
+            writer.newLine();
+
+            writer.flush();
         } catch (Exception e) {
             logger.error("Something went wrong saving data", e);
+        } finally {
+            try {
+                closer.close();
+            } catch (IOException e) {
+                logger.error("Failed to close streams.", e);
+            }
         }
 
         logger.debug("data: " + stringBuilder.toString());
