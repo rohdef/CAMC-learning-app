@@ -4,8 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+
+import java.util.List;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +21,7 @@ import java.io.File;
 public class DataHelper implements View.OnClickListener {
     private final Logger logger = LoggerFactory.getLogger(DataHelper.class);
     private Context context;
+    private static int counter = 0;
 
     public void setContext(Context context) {
         this.context = context;
@@ -40,9 +44,34 @@ public class DataHelper implements View.OnClickListener {
             }
         }
 
+        File[] files = storageDirectory.listFiles();
+        for (File file : files) {
+            if (file.exists()) file.delete();
+        }
+        counter = 0;
+    }
+
+    public void rename() {
+        String storageState = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(storageState)) {
+            logger.error("Failed to get storage access.");
+            return;
+        }
+
+        File externalFilesDir = context.getExternalFilesDir(null);
+        final File storageDirectory = new File(externalFilesDir, "listr");
+        if (!storageDirectory.exists()) {
+            if (!storageDirectory.mkdir()) {
+                logger.error("Could not create storage dir");
+                return;
+            }
+        }
+
         String filename = "camcWeka.data";
         File file = new File(storageDirectory, filename);
-        if (file.exists()) file.delete();
+        File newName = new File(storageDirectory, filename + counter);
+        if (file.exists()) file.renameTo(newName);
+        counter++;
     }
 
     private void sendFile() {
@@ -62,17 +91,16 @@ public class DataHelper implements View.OnClickListener {
             }
         }
 
-        String filename = "camcWeka.data";
-        File file = new File(storageDirectory, filename);
-
-        if (file.exists()) {
-            Uri uri = Uri.fromFile(file);
-            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-            emailIntent.setType("text/plain");
-            emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
-            emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(emailIntent);
+        File[] files = storageDirectory.listFiles();
+        ArrayList<Uri> uris = new ArrayList<Uri>();
+        for (File f : files) {
+            uris.add(Uri.fromFile(f));
         }
+        Intent emailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+        emailIntent.setType("text/plain");
+        emailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+        emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(emailIntent);
     }
 
     @Override

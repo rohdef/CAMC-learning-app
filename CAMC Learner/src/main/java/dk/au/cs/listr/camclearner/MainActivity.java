@@ -134,6 +134,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             wakeLock.release();
                             setButtonsEnabled(true);
                             isIdle = true;
+                            dataHelper.rename();
                             try {
                                 notificationTone.play();
                             } catch (Exception e) {}

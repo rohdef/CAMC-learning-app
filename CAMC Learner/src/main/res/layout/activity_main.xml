@@ -90,4 +90,5 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@+id/textView2"
         android:text="Delete data" />
+
 </RelativeLayout>
